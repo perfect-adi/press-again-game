@@ -3,7 +3,7 @@ import { useCallback, useRef, useState } from "react";
 type SoundKind = "click" | "warning" | "terminal" | "lock" | "launch" | "explosion" | "achievement";
 
 export function usePrankSound() {
-  const [enabled, setEnabled] = useState(false);
+  const [enabled, setEnabled] = useState(true);
   const contextRef = useRef<AudioContext | null>(null);
 
   const toggle = useCallback(() => setEnabled((value) => !value), []);
@@ -11,8 +11,10 @@ export function usePrankSound() {
   const play = useCallback((kind: SoundKind) => {
     if (!enabled || typeof window === "undefined") return;
     const AudioContextClass = window.AudioContext;
+    if (!AudioContextClass) return;
     const context = contextRef.current ?? new AudioContextClass();
     contextRef.current = context;
+    if (context.state === "suspended") void context.resume();
     const now = context.currentTime;
     const oscillator = context.createOscillator();
     const gain = context.createGain();

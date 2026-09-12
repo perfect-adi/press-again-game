@@ -48,6 +48,24 @@ export function loadGame(): SavedGame {
   }
 }
 
+const REFRESH_KEY = "dont-press-last-load";
+const DOUBLE_REFRESH_WINDOW = 3000;
+
+/** Returns true when the page was refreshed twice quickly, meaning the counter should reset. */
+export function checkDoubleRefreshReset(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const raw = window.sessionStorage.getItem(REFRESH_KEY);
+    const now = Date.now();
+    const last = raw ? Number(raw) : 0;
+    const shouldReset = Boolean(last) && now - last < DOUBLE_REFRESH_WINDOW;
+    window.sessionStorage.setItem(REFRESH_KEY, shouldReset ? "0" : String(now));
+    return shouldReset;
+  } catch {
+    return false;
+  }
+}
+
 export function saveGame(game: SavedGame) {
   if (typeof window === "undefined") return;
   try {

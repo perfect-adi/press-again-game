@@ -6,6 +6,7 @@ import {
   ACHIEVEMENTS,
   EMPTY_GAME,
   achievementsForCount,
+  checkDoubleRefreshReset,
   consequenceFor,
   loadGame,
   saveGame,
@@ -70,9 +71,13 @@ export function DontPressGame() {
 
   useEffect(() => {
     mountedRef.current = true;
-    const loaded = loadGame();
+    const stored = loadGame();
+    const shouldReset = checkDoubleRefreshReset();
+    const loaded = shouldReset ? { ...stored, count: 0 } : stored;
+    if (shouldReset) saveGame(loaded);
     setGame(loaded);
     if (loaded.count > 0) setScene(sceneAfterCount(loaded.count));
+    else setScene(shouldReset ? { ...initialScene, fine: "Counter reset." } : initialScene);
     setReady(true);
     return () => { mountedRef.current = false; };
   }, []);
@@ -180,14 +185,17 @@ export function DontPressGame() {
       return;
     }
     if (count === 42) {
+      play("achievement");
       safeScene({ title: "YOU WIN.", subtitle: "There was never anything to win.", effect: "calm" });
       await pause(1800);
     } else if (Math.random() < 0.035) {
+      play("terminal");
       safeScene({ title: "...", effect: "glitch" });
       await pause(1300);
       safeScene({ title: "Nice try.", effect: "calm" });
       await pause(900);
     } else {
+      play(count % 10 === 0 ? "explosion" : count % 5 === 0 ? "warning" : "lock");
       safeScene({ eyebrow: `PRESS ${count}`, title: consequenceFor(count), subtitle: "The situation continues to deteriorate.", effect: count % 5 === 0 ? "warning" : "calm" });
       await pause(900);
     }
@@ -252,6 +260,9 @@ export function DontPressGame() {
         )}
         {scene.fine && <p className="fine-print">{scene.fine}</p>}
       </section>
+
+      <p className="reset-hint">Refresh twice quickly to reset the counter.</p>
+
 
       {toast && (
         <aside className="achievement-toast" role="status">
