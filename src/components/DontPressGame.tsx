@@ -49,6 +49,7 @@ export function DontPressGame() {
   const [scene, setScene] = useState<Scene>(initialScene);
   const [locked, setLocked] = useState(false);
   const [toast, setToast] = useState<Achievement | null>(null);
+  const [hintShown, setHintShown] = useState(false);
   const [ready, setReady] = useState(false);
   const mountedRef = useRef(true);
   const clickTimes = useRef<number[]>([]);
@@ -261,7 +262,19 @@ export function DontPressGame() {
         {scene.fine && <p className="fine-print">{scene.fine}</p>}
       </section>
 
-      <p className="reset-hint">Refresh twice quickly to reset the counter.</p>
+      <div className="hint-zone">
+        {hintShown ? (
+          <p className="reset-hint">Refresh twice quickly to reset the counter.</p>
+        ) : (
+          <button
+            className="hint-button"
+            type="button"
+            onClick={() => { play("achievement"); setHintShown(true); }}
+          >
+            WANT A HINT?
+          </button>
+        )}
+      </div>
 
 
       {toast && (
